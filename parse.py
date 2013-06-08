@@ -6,6 +6,7 @@ Created on Sat Jun  8 04:49:16 2013
 """
 
 from bs4 import BeautifulSoup as BS
+from bs4 import element
 import codecs
 import glob
 import sys
@@ -35,8 +36,10 @@ datatypes2 = (\
     )
 
 datatypes1 = (\
-    (u"部首:", u"部首"),\
-    (u"詞性:", u"詞性"),\
+    (u"^部首:", u"部首"),\
+    (u"^詞性:", u"詞性"),\
+    (u"^部首:", u"部首"),\
+    (u"^筆畫:",u"筆畫"),\
     )
 
 def parse_file(infile):
@@ -49,17 +52,32 @@ def parse_file(infile):
     for r in rows:
         cells = r.findChildren()
         for i,c in enumerate(cells):
-            text = c.text.strip()
-            following = cells[i+1].text.strip() if i+1 < len(cells) else ""
+            text = cleanup_cell([x for x in c.children])
+            following = [x for x in cells[i+1].contents ] if i+1 < len(cells) else None
             dict_entry.update(parse_cell(text,following))
     dict_entry = parse_meaning(dict_entry)
     return dict_entry
 
 
-
+def cleanup_cell(content):
+    for i,e in enumerate(content):
+        if isinstance(e,element.Tag):
+            if e.name == "br":
+                content[i]="\n"
+            elif e.name == "img":
+                if 'src' in e.attrs:
+                    content[i] = "{[%s]}" % (e.attrs['src'][7:][:-4],)
+                else:
+                    content[i] = 'X'
+            else:
+                content[i] = e.getText()
+        else:
+            content[i] = e.strip().replace("\n","")
+    return "".join(content)
 
 def parse_cell(current,following):
-    if following != "":
+    if following :
+        following = cleanup_cell(following)
         for regexp,label in datatypes2:
             if re.match(regexp,current):
                 return {label:following}
@@ -73,16 +91,19 @@ def parse_cell(current,following):
 def parse_meaning(entry):
     if not u'釋義' in entry :
         return entry
-    s = entry[u'釋義']
-    if u"。例：" in s:
-        fields = s.split(u"。例：")
-        if len(fields) == 2:
-            (meaning,ex) = fields
-            examples = RE_ex.findall(ex)
-            ret = []
-            for ex in examples:
-                ret.append((u"\ufff9"+ex[0],u"\ufffb"+ex[1]))
-            entry[u'釋義'] = {'def': meaning, 'example': ret}
+    senses = entry[u'釋義'].split("\n")
+    parsed_senses = []
+    for s in senses:
+        if u"。例：" in s:
+            fields = s.split(u"。例：")
+            if len(fields) == 2:
+                (meaning,ex) = fields
+                examples = RE_ex.findall(ex)
+                parsed_ex = []
+                for ex in examples:
+                    parsed_ex.append((u"\ufff9"+ex[0],u"\ufffb"+ex[1]))
+                parsed_senses.append({'def': meaning, 'example': parsed_ex})
+    entry[u'釋義'] = parsed_senses
     return entry
 
 
