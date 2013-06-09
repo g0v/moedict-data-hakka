@@ -56,6 +56,7 @@ def parse_file(infile):
             following = [x for x in cells[i+1].contents ] if i+1 < len(cells) else None
             dict_entry.update(parse_cell(text,following))
     dict_entry = parse_meaning(dict_entry)
+    dict_entry[u'檔名'] = infile
     return dict_entry
 
 
