@@ -19,9 +19,9 @@ sounds = ->
     .replace(/5/g '⁵')
 
 def = ->
-  it.example = [ e.join('') - /[（）]/g for e in it.example ]
-  delete it.example unless it.example?.length
-  it.def += '。' unless it is /[。，、；：？！─…．·－」』》〉]$/
+  it.example = [ e.join('') - /[（）]/g for e in it.example ] if it.example
+  delete it.example unless it.example?length
+  it.def += '。' unless it.def is /[。，、；：？！─…．·－」』》〉]$/
   it.def -= /^\d+\.\s*/
   it
 

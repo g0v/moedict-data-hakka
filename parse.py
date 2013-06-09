@@ -12,6 +12,7 @@ import glob
 import sys
 import re
 import json
+import os
 
 RE_ex = re.compile(u"(?P<ex>[^\（]+)(?P<trans>（[^\）]+）)",re.UNICODE)
 
@@ -56,7 +57,7 @@ def parse_file(infile):
             following = [x for x in cells[i+1].contents ] if i+1 < len(cells) else None
             dict_entry.update(parse_cell(text,following))
     dict_entry = parse_meaning(dict_entry)
-    dict_entry[u'檔名'] = infile
+    dict_entry[u'檔名'] = os.path.basename(infile)
     return dict_entry
 
 
@@ -104,6 +105,8 @@ def parse_meaning(entry):
                 for ex in examples:
                     parsed_ex.append((u"\ufff9"+ex[0],u"\ufffb"+ex[1]))
                 parsed_senses.append({'def': meaning, 'example': parsed_ex})
+        else:
+            parsed_senses.append({'def': s})
     entry[u'釋義'] = parsed_senses
     return entry
 
