@@ -14,7 +14,7 @@ import re
 import json
 import os
 
-RE_ex = re.compile(u"(?P<ex>[^\（]+)(?P<trans>（[^\）]+）)",re.UNICODE)
+RE_ex = re.compile(u"(?P<ex>[^\（]+)(?P<trans>（.+）)",re.UNICODE)
 
 
 

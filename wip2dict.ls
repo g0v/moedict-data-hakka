@@ -12,17 +12,37 @@ const ABBREV = {
 const PUA = pua!
 
 sounds = ->
-  it.replace(/1/g '¹')
-    .replace(/2/g '²')
-    .replace(/3/g '³')
-    .replace(/4/g '⁴')
-    .replace(/5/g '⁵')
+  it.replace(/1\s*/g '¹')
+    .replace(/2\s*/g '²')
+    .replace(/3\s*/g '³')
+    .replace(/4\s*/g '⁴')
+    .replace(/5\s*/g '⁵')
+
+bracketed = ->
+  x = it.replace(
+    /([〔﹝]\s*又讀\s*|（|這粒)(.*?(?:[12345][12345]|[四海大平安]|lin53go11)\s*)\s*([〕）﹞﹝])/g
+    (_, pre, inner, post) -> "#pre#{
+      sounds(inner).replace(
+        /([^四海大平安]+)([四海大平安])\s*/g
+        (_, snd, variant) -> "#variant\u20E3#{snd}、"
+      ) - /\s*、\s*$/
+    }#post"
+  ).replace(
+    /((?:\w+\d\d)+)([四海大平安]?)(\s+)?/g
+    (_, snd, variant='', spc='') ->
+      spc = \、 if spc
+      snd = sounds snd
+      variant += "\u20E3" if variant
+      "#variant#snd#spc"
+  )
+  return x
 
 def = ->
-  it.example = [ e.join('') - /[（）]/g for e in it.example ] if it.example
+  it.example = [ bracketed(e.join '') - /[（）]/g - /^\s*/ - /\s*$/ for e in it.example ] if it.example
   delete it.example unless it.example?length
   it.def += '。' unless it.def is /[。，、；：？！─…．·－」』》〉]$/
   it.def -= /^\d+\.\s*/
+  it.def = bracketed it.def
   it
 
 py = ->
@@ -37,9 +57,9 @@ m2t = -> {
   heteronyms: [ {
     audio_id: (100000 + Number(it['檔名'] - /\D/g)) - /^1/
     pinyin: py it
-    synonyms: [ norm(x - /^\d+\.\s*/) for x in it['近義詞'] / \、] * \,
-    antonyms: [ norm(x - /^\d+\.\s*/) for x in it['反義詞'] / \、] * \,
-    definitions: [ def d <<< { type: "#{ it['詞性'] || '' }".replace(/　/g \,) } for d in it['釋義'] ]
+    synonyms: [ bracketed norm(x - /^\d+\.\s*/) for x in it['近義詞'] / \、] * \,
+    antonyms: [ bracketed norm(x - /^\d+\.\s*/) for x in it['反義詞'] / \、] * \,
+    definitions: [ def d <<< { type: "#{ it['詞性'] || '' }".replace(/　/g \,) } for d in it['釋義'] | d is /\S\S/ ]
   } ]
 }
 
@@ -66,21 +86,43 @@ for w in WIP | w['詞目']
     h
   )
 
-console.log JSON.stringify(for title in Object.keys(HETERONYMS).sort!
-  { title, heteronyms: flatten sort-by( ((.0.audio_id) >> Number), HETERONYMS[title] ) }
-)
-process.exit!
+unless process.env.H2M
+  console.log JSON.stringify(for title in Object.keys(HETERONYMS).sort!
+    { title, heteronyms: flatten sort-by( ((.0.audio_id) >> Number), HETERONYMS[title] ) }
+  )
+  process.exit!
 
+LTM-regexes = []
+autolink = (chunk) ->
+  for re in LTM-regexes
+    chunk.=replace(re, -> escape "`#it~")
+  return unescape chunk
+
+require! fs
+pre2 = JSON.parse fs.read-file-sync "/Users/audreyt/w/moedict-webkit/a/lenToRegex.json" \utf8
+lenToRegex = pre2.lenToRegex
+lens = []
+for len of lenToRegex
+  lens.push len
+  lenToRegex[len] = new RegExp lenToRegex[len], \g
+lens.sort (a, b) -> b - a
+for len in lens
+  LTM-regexes.push lenToRegex[len]
+
+# H2M
 h2m = {}
 for w in WIP | w['對應華語']
   title = norm(w['詞目'])
   m = ",#{ w['對應華語'].replace(/、/g \,).replace(/　/g \,).replace(/\d+\./g '') },"
-  m = m.replace(",#title,", ',')
-  m -= /^,/
-  m -= /,$/
-  h2m[title] = m
+#  m = m.replace(",#title,", ',')
+  m -= /^,+/
+  m -= /,+$/
+  h2m[title] = (for t in m / \,
+    x = autolink t
+    if x is "`#title~" then "" else x
+  ) * \,
 
-console.log JSON.stringify h2m
+console.log JSON.stringify a: h2m
 
 process.exit!
 console.log JSON.stringify {
