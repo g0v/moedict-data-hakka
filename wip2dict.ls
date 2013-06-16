@@ -86,11 +86,32 @@ for w in WIP | w['詞目']
     h
   )
 
-unless process.env.H2M
+unless process.env.H2M or process.env.M2H
   console.log JSON.stringify(for title in Object.keys(HETERONYMS).sort!
     { title, heteronyms: flatten sort-by( ((.0.audio_id) >> Number), HETERONYMS[title] ) }
   )
   process.exit!
+
+if process.env.M2H
+  index = fs.read-file-sync "/Users/audreyt/w/moedict-webkit/a/index.json" \utf8
+  m2h = {}
+  for w in WIP | w['對應華語']
+    title = norm(w['詞目'])
+    m = ",#{ w['對應華語'].replace(/、/g \,).replace(/　/g \,).replace(/\d+\./g '') },"
+    m -= /^,+/
+    m -= /,+$/
+    for t in m / \,
+      continue unless ~index.indexOf("\"#t\"")
+      h = if title is t then '' else title
+      if t of m2h
+        m2h[t] += ",#h"
+      else
+        m2h[t] = h
+  console.log JSON.stringify h: m2h
+  process.exit!
+
+console.log JSON.stringify a: h2m
+
 
 LTM-regexes = []
 autolink = (chunk) ->
@@ -114,7 +135,6 @@ h2m = {}
 for w in WIP | w['對應華語']
   title = norm(w['詞目'])
   m = ",#{ w['對應華語'].replace(/、/g \,).replace(/　/g \,).replace(/\d+\./g '') },"
-#  m = m.replace(",#title,", ',')
   m -= /^,+/
   m -= /,+$/
   h2m[title] = (for t in m / \,
