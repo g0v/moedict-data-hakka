@@ -258,6 +258,6 @@ function pua => {
   "F44F": "𠎷",
   "F463": "㗘"
 
-  F488: \割 # XXX
-  F4BC: \墩 # XXX
+  F488: \𠠝
+  F4BC: \㑁
 }
