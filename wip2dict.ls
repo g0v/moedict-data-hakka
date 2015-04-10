@@ -3,6 +3,7 @@ it = meng!
 require! fs
 
 const ABBREV = {
+  "南四縣": \南
   "四縣音": \四
   "海陸音": \海
   "大埔音": \大
@@ -23,12 +24,12 @@ bracketed = ->
     /([〔﹝]\s*又讀\s*|（|這粒)(.*?(?:[12345][12345]|[四海大平安]|lin53go11)\s*)\s*([〕）﹞﹝])/g
     (_, pre, inner, post) -> "#pre#{
       sounds(inner).replace(
-        /([^四海大平安]+)([四海大平安])\s*/g
+        /([^南四海大平安]+)([南四海大平安])\s*/g
         (_, snd, variant) -> "#variant\u20E3#{snd}、"
       ) - /\s*、\s*$/
     }#post"
   ).replace(
-    /((?:\w+\d\d)+)([四海大平安]?)(\s+)?/g
+    /((?:\w+\d\d)+)([南四海大平安]?)(\s+)?/g
     (_, snd, variant='', spc='') ->
       spc = \、 if spc
       snd = sounds snd
@@ -38,7 +39,13 @@ bracketed = ->
   return x
 
 def = ->
-  it.example = [ bracketed(e.join '') - /[（）]/g - /^\s*/ - /\s*$/ for e in it.example ] if it.example
+  if it.example
+    it.example = [ bracketed(e.join '') - /[（）]/g - /^\s*/ - /\s*$/ for e in it.example ]
+    if it.example.length is 2 and it.example.1 is /^\uFFF9(.)\uFFFB$/
+      punct = RegExp.$1
+      it.example.0 += punct
+      it.example.0 .=replace(/\uFFFB/ "#punct\uFFFB")
+      it.example.pop!
   delete it.example unless it.example?length
   it.def += '。' unless it.def is /[。，、；：？！─…．·－」』》〉]$/
   it.def -= /^\d+\.\s*/
@@ -47,7 +54,7 @@ def = ->
 
 py = ->
   m = []
-  for x in ["四縣音" "海陸音" "大埔音" "饒平音" "詔安音"] | it[x]
+  for x in ["南四縣" "四縣音" "海陸音" "大埔音" "饒平音" "詔安音"] | it[x]
     m.push(ABBREV[x] + '\u20DE' + sounds(it[x] - /（.*）/ - /\s/g))
   m * ' '
 
@@ -149,7 +156,7 @@ console.log JSON.stringify {
   "title": "發芽",
   "heteronyms": [ {
      "synonyms": "暴芽,暴筍",
-     "pinyin": "四\u20DEfad²nga¹¹ 海\u20DEfad⁵nga⁵⁵ 大\u20DEfad²¹nga¹¹³ 平\u20DEfad²⁴nga⁵³",
+     "pinyin": "四\u20DEfad²nga¹¹ 海\u20DEfad⁵nga⁵⁵ 大\u20DEfad²¹nga¹¹³ 平\u20DEfad²⁴nga⁵³ ",
      "definitions": [
         "example": [
             "\uFFF9春天一到，草仔樹仔相賽開始發芽。\uFFFB春天一到，草木相繼開始萌芽。"

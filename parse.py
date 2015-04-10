@@ -14,13 +14,14 @@ import re
 import json
 import os
 
-RE_ex = re.compile(u"(?P<ex>[^\（]+)(?P<trans>（.+）)",re.UNICODE)
+RE_ex = re.compile(u"(?P<ex>[^\（]+)(?P<trans>（.+）)?",re.UNICODE)
 
 
 
 
 datatypes2 = (\
     (u"^詞目$",u"詞目"),\
+    (u"^南四縣$", u"南四縣"),\
     (u"^四縣音$", u"四縣音"),\
     (u"^海陸音$", u"海陸音"),\
     (u"^大埔音$", u"大埔音"),\
