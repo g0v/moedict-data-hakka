@@ -40,7 +40,7 @@ bracketed = ->
 
 def = ->
   if it.example
-    it.example = [ bracketed(e.join '') - /[（）]/g - /^\s*/ - /\s*$/ for e in it.example ]
+    it.example = [ bracketed(e.join '').replace(/（([^）][^）]+)）/, '$1') - /^\s*/ - /\s*$/ for e in it.example ]
     if it.example.length is 2 and it.example.1 is /^\uFFF9(.)\uFFFB$/
       punct = RegExp.$1
       it.example.0 += punct
@@ -263,6 +263,7 @@ function pua => {
   "F446": "𫝘",
   "F448": "䯋",
   "F44F": "𠎷",
+  "F457": "㕸",
   "F463": "㗘"
 
   F488: \𠠝
