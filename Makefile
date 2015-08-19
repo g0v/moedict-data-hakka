@@ -11,5 +11,5 @@ parse ::
 	virtualenv venv
 	. venv/bin/activate
 	pip install beautifulsoup4 lxml
-	python parse.py ~/Downloads/taiwan_language/hakka wip.json
+	python parse.py corpus/text/ wip.json
 	lsc -j wip.json > work-in-progress.json
